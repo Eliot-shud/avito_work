@@ -1,4 +1,4 @@
-from rest_framework.fields import SerializerMethodField, IntegerField
+from rest_framework.fields import IntegerField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
 
@@ -33,7 +33,10 @@ class UserCreateSerializer(ModelSerializer):
         return super().is_valid(raise_exception=raise_exception)
 
     def create(self, validated_data):
+        passwd = validated_data.pop('password')
         new_user = User.objects.create(**validated_data)
+        new_user.set_password(passwd)
+        new_user.save()
         for loc_name in self._locations:
             loc, _ = Location.objects.get_or_create(name=loc_name)
             new_user.location.add(loc)
