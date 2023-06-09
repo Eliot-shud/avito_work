@@ -18,16 +18,26 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.routers import SimpleRouter
 
-from ads.views.ad import main_view
+from ads.views import main_view
 from avito_work import settings
+from users.views import LocationViewSet
+
+router = SimpleRouter()
+router.register('location', LocationViewSet)
 
 urlpatterns = [
     path('', main_view),
-    path("ads/", include("ads.urls.ad")),
-    path("cat/", include("ads.urls.cat")),
-    path("user/", include("users.urls"))
+
+    path('users/', include("users.urls")),
+    path('ads/', include("ads.urls.ad")),
+    path('cat/', include("ads.urls.cat")),
+
+    path('admin/', admin.site.urls),
 ]
+
+urlpatterns += router.urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

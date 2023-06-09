@@ -1,12 +1,12 @@
 from django.urls import path
 
-from ads.views.cat import CatDetailView, CatCreateView, CatListView, CatUpdateView, \
-    CatDeleteView
+from ads.views import CatListView, CatDetailView, CatCreateView, CatUpdateView, CatDeleteView
+
 
 urlpatterns = [
-    path("create/", CatCreateView.as_view()),
-    path("<int:pk>/", CatDetailView.as_view()),
-    path("", CatListView.as_view()),
-    path("<int:pk>/update/", CatUpdateView.as_view()),
-    path("<int:pk>/delete/", CatDeleteView.as_view()),
+    path('', CatListView.as_view()),
+    path('<int:pk>/', CatDetailView.as_view()),
+    path('create/', CatCreateView.as_view()),
+    path('update/<int:pk>/', CatUpdateView.as_view()),
+    path('delete/<int:pk>/', CatDeleteView.as_view()),
 ]
