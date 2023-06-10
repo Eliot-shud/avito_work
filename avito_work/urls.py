@@ -15,29 +15,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from avito_work import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.routers import SimpleRouter
 
-from ads.views.ad import main_view
-from avito_work import settings
-from users.views import LocationViewSet
-
-router = SimpleRouter()
-router.register('location', LocationViewSet)
 
 urlpatterns = [
-    path('', main_view),
-
-    path('users/', include("users.urls")),
-    path('ads/', include("ads.urls.ad")),
-    path('cat/', include("ads.urls.cat")),
-    path('selection/', include("ads.urls.selection")),
     path('admin/', admin.site.urls),
+    path('ads/', include('ads.urls.ad')),
+    path('cats/', include('ads.urls.cat')),
+    path('selection/', include('ads.urls.selection')),
+    path('users/', include('users.urls.user')),
+    path('location/', include('users.urls.location')),
 ]
-
-urlpatterns += router.urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

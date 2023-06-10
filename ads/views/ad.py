@@ -1,101 +1,37 @@
-import json
-
-from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.viewsets import ModelViewSet
 
-from ads.models import Category, Ad, User
+from ads.models import Ad
 from ads.permissions import IsOwner, IsStaff
-from ads.serializers import AdSerializer
-
-
-def main_view(request):
-    return JsonResponse({"status": "ok"}, status=200)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatListView(ListView):
-    model = Category
-
-    def get(self, request, *args, **kwargs):
-        super().get(request, *args, **kwargs)
-        response = []
-        for category in self.object_list.order_by('name'):
-            response.append(
-                {
-                    'id': category.id,
-                    'name': category.name
-                }
-            )
-
-        return JsonResponse(response, safe=False)
-
-
-class CatDetailView(DetailView):
-    model = Category
-
-    def get(self, request, *args, **kwargs):
-        category = self.get_object()
-        return JsonResponse({"id": category.id, "name": category.name})
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatCreateView(CreateView):
-    model = Category
-    fields = ['name']
-
-    def post(self, request, *args, **kwargs):
-        category_data = json.loads(request.body)
-
-        new_category = Category.objects.create(**category_data)
-        return JsonResponse({'id': new_category.id, 'name': new_category.name})
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatUpdateView(UpdateView):
-    model = Category
-    fields = ['name']
-
-    def patch(self, request, *args, **kwargs):
-        super().post(request, *args, **kwargs)
-        category_data = json.loads(request.body)
-
-        self.object.name = category_data['name']
-        self.object.save()
-        return JsonResponse({'id': self.object.id, 'name': self.object.name})
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CatDeleteView(DeleteView):
-    model = Category
-    success_url = '/'
-
-    # работает от POST запроса
-    def delete(self, request, *args, **kwargs):
-        super().delete(request, *args, **kwargs)
+from ads.serializers import AdSerializer, AdListSerializer, AdCreateSerializer, AdDetailSerializer
 
 
 class AdViewSet(ModelViewSet):
     queryset = Ad.objects.order_by('-price')
-    serializer_class = AdSerializer
+    default_serializer_class = AdSerializer
 
     default_permission = [AllowAny]
-    permission = {
+    permissions = {
         'retrieve': [IsAuthenticated],
         'update': [IsAuthenticated, IsOwner | IsStaff],
         'partial_update': [IsAuthenticated, IsOwner | IsStaff],
-        'destroy': [IsAuthenticated, IsOwner | IsStaff],
+        'destroy': [IsAuthenticated, IsOwner | IsStaff]
     }
 
+    serializers = {
+        'list': AdListSerializer,
+        'create': AdCreateSerializer,
+        'retrieve': AdDetailSerializer,
+    }
+
+    def get_serializer_class(self):
+        return self.serializers.get(self.action, self.default_serializer_class)
+
     def get_permissions(self):
-        return [permission() for permission in self.permission.get(self.action, self.default_permission)]
+        return [permission() for permission in self.permissions.get(self.action, self.default_permission)]
 
     def list(self, request, *args, **kwargs):
-
-        categories = request.GET.getlist("cat")
+        categories = request.GET.getlist('cat')
         if categories:
             self.queryset = self.queryset.filter(category_id__in=categories)
 
@@ -105,7 +41,7 @@ class AdViewSet(ModelViewSet):
 
         location = request.GET.get('location')
         if location:
-            self.queryset = self.queryset.filter(author__location__name__icontains=location)
+            self.queryset = self.queryset.filter(author__location__name__incontains=location)
 
         price_from = request.GET.get('price_from')
         if price_from:

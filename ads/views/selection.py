@@ -12,21 +12,21 @@ class SelectionViewSet(ModelViewSet):
     default_serializer_class = SelectionSerializer
 
     default_permission = [AllowAny]
-    permission = {
+    permissions = {
         'create': [IsAuthenticated],
         'update': [IsAuthenticated, IsOwner],
         'partial_update': [IsAuthenticated, IsOwner],
-        'destroy': [IsAuthenticated, IsOwner],
+        'destroy': [IsAuthenticated, IsOwner]
     }
 
     serializers = {
-        "list": SelectionListSerializer,
+        'list': SelectionListSerializer,
         'create': SelectionCreateSerializer,
-        'retrieve': SelectionDetailSerializer,
+        'retrieve': SelectionDetailSerializer
     }
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.default_serializer_class)
 
     def get_permissions(self):
-        return [permission() for permission in self.permission.get(self.action, self.default_permission)]
+        return [permission() for permission in self.permissions.get(self.action, self.default_permission)]
